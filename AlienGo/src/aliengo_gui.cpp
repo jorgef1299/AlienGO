@@ -36,11 +36,9 @@ namespace Aliengo {
         connect(button_group_bottom_camera, SIGNAL(buttonPressed(int)), this, SLOT(RadioButtonBottomCameraPressed(int)));
         connect(button_group_map, SIGNAL(buttonPressed(int)), this, SLOT(RadioButtonMapPressed(int)));
 
-        // Initialize ROS Image Subscribers
-        FTopCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/top_camera/color/image_raw");
-        connect(FTopCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewTopCameraImage()));
-        FBottomCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/camera/color/image_raw");
-        connect(FBottomCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewBottomCameraImage()));
+        FTopCameraState = CameraState::Disabled;
+        FBottomCameraState = CameraState::Disabled;
+        FMapState = MapState::Disabled;
     }
 
     MainWindow::~MainWindow() {
@@ -50,26 +48,110 @@ namespace Aliengo {
 
     void MainWindow::RadioButtonTopCameraPressed(int button_id)
     {
-        ROS_INFO("Top Camera: Button %d clicked...", button_id);
+        if(button_id == -2 && FTopCameraState != CameraState::Disabled) {
+            // Stop image subscriber
+            FTopCameraImageSub->StopSubscriber();
+            // Remove pixmap
+            ui->TopCameraImage->clear();
+            // Set black background
+            ui->TopCameraImage->setStyleSheet("background-color: black;");
+            FTopCameraState = CameraState::Disabled;
+        }
+        else if(button_id == -3 && FTopCameraState != CameraState::RGB) {
+            // Stop last image subscriber
+            FTopCameraImageSub->StopSubscriber();
+            // Init new image subscriber
+            FTopCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/top_camera/color/image_raw");
+            connect(FTopCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewTopCameraImage()));
+            // Clear label
+            ui->TopCameraImage->clear();
+            FTopCameraState = CameraState::RGB;
+        }
+        else if(button_id == -4 && FTopCameraState != CameraState::Depth) {
+            // Stop last image subscriber
+            FTopCameraImageSub->StopSubscriber();
+            // Init new image subscriber
+            FTopCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/top_camera/depth/image_rect_raw"); //TODO: Subscribe Depth
+            connect(FTopCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewTopCameraDepthImage()));
+            // Clear label
+            ui->TopCameraImage->clear();
+            FTopCameraState = CameraState::Depth;
+        }
     }
 
     void MainWindow::RadioButtonBottomCameraPressed(int button_id)
     {
-        ROS_INFO("Bottom Camera: Button %d clicked...", button_id);
+        if(button_id == -2 && FBottomCameraState != CameraState::Disabled) {
+            // Stop image subscriber
+            FBottomCameraImageSub->StopSubscriber();
+            // Remove pixmap
+            ui->BottomCameraImage->clear();
+            // Set black background
+            ui->BottomCameraImage->setStyleSheet("background-color: black;");
+            FBottomCameraState = CameraState::Disabled;
+        }
+        else if(button_id == -3 && FBottomCameraState != CameraState::RGB) {
+            // Init image subscriber
+            FBottomCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/camera/color/image_raw");
+            connect(FTopCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewBottomCameraImage()));
+            // Clear label
+            ui->BottomCameraImage->clear();
+            FBottomCameraState = CameraState::RGB;
+        }
+        else if(button_id == -4 && FBottomCameraState != CameraState::Depth) {
+            // Init image subscriber
+            FBottomCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/camera/depth/image_rect_raw");
+            connect(FTopCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewBottomCameraImage()));
+            // Clear label
+            ui->BottomCameraImage->clear();
+            FBottomCameraState = CameraState::Depth;
+        }
     }
 
     void MainWindow::RadioButtonMapPressed(int button_id)
     {
-        ROS_INFO("Map: Button %d clicked...", button_id);
+        if(button_id == -2 && FMapState != MapState::Disabled) {
+            // Stop map related subscribers
+            //TODO: Add subscribers
+            FMapState = MapState::Disabled;
+        }
+        else if(button_id == -3 && FMapState != MapState::Two_D) {
+            FMapState = MapState::Two_D;
+        }
+        else if(button_id == -4 && FMapState != MapState::Three_D) {
+            FMapState = MapState::Three_D;
+        }
     }
 
     void MainWindow::SLOT_ROS_NewTopCameraImage()
     {
-        //ui->TopCam
         ROS_INFO("Recebi frame da câmara topo!");
         sensor_msgs::Image image;
         FTopCameraImageSub->GetData(image);
         QImage converted_image(&image.data[0], image.width, image.height, image.step, QImage::Format_RGB888);
+        ui->TopCameraImage->setStyleSheet("");
+        QPixmap pix_image = QPixmap::fromImage(converted_image);
+        ui->TopCameraImage->setPixmap(pix_image);
+    }
+
+    void convert_depth_to_color(const sensor_msgs::ImageConstPtr &msg, QImage& qt_image) {
+        float min_depth = 0.29f;
+        float max_depth = 10.0f;
+        float d_normal;
+
+        // Create QImage
+        qt_image = QImage(msg->width, msg->height, QImage::Format_RGB888);
+
+        // Convert range
+//        for(int i=0; i < msg->height;)
+    }
+
+    void MainWindow::SLOT_ROS_NewTopCameraDepthImage()
+    {
+        ROS_INFO("Recebi depth frame da câmara topo!");
+        sensor_msgs::Image image;
+        FTopCameraImageSub->GetData(image);
+        QImage converted_image(&image.data[0], image.width, image.height, image.step, QImage::Format_Indexed8);
         ui->TopCameraImage->setStyleSheet("");
         QPixmap pix_image = QPixmap::fromImage(converted_image);
         ui->TopCameraImage->setPixmap(pix_image);

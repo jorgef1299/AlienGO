@@ -14,7 +14,7 @@
 
 // ROS includes
 #include <ros/ros.h>
-#include <ros_qt_sensor_msgs_image.h>
+#include "../ros_qt_interface/ros_qt_sensor_msgs_image.h"
 
 namespace Ui {
     class MainWindow;
@@ -45,6 +45,7 @@ namespace Aliengo {
         void RadioButtonBottomCameraPressed(int button_id);
         void RadioButtonMapPressed(int button_id);
         void SLOT_ROS_NewTopCameraImage();
+        void SLOT_ROS_NewTopCameraDepthImage();
         void SLOT_ROS_NewBottomCameraImage();
     private:
         rviz::VisualizationManager* FManager;

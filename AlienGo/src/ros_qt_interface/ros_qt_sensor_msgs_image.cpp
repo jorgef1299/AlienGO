@@ -1,4 +1,4 @@
-#include "../include/AlienGo/ros_qt_sensor_msgs_image.h"
+#include "../../include/ros_qt_interface/ros_qt_sensor_msgs_image.h"
 
 namespace ros_qt_interface
 {
@@ -37,6 +37,11 @@ namespace ros_qt_interface
         FMutex.lock();
         data=FData;
         FMutex.unlock();
+    }
+
+    void TRosQtSensorMsgsImageSub::StopSubscriber()
+    {
+        //FDataSub.shutdown();
     }
 
     void TRosQtSensorMsgsImageSub::DataReceivedCallback(const sensor_msgs::ImageConstPtr& data)

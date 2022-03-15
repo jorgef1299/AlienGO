@@ -31,6 +31,7 @@ namespace ros_qt_interface {
             TRosQtSensorMsgsImageSub(std::string TopicName, std::string Namespace = "~", unsigned int queueSize = 10);
             virtual ~TRosQtSensorMsgsImageSub();
             void GetData(sensor_msgs::Image &data);
+            void StopSubscriber();
 
         Q_SIGNALS:
             void DataReceived();
