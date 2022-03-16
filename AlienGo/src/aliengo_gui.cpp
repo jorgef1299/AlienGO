@@ -17,6 +17,8 @@ namespace Aliengo {
         ros::param::get("/map/3d_topic", FMap3DTopicName);
         ros::param::get("/map/2d_topic", FMap2DTopicName);
         ros::param::get("/frame_id", FFrameId);
+        ros::param::get("/display_pointcloud2/size_pixels", FDisplayPointCloud2SizePixels);
+        ros::param::get("/display_pointcloud2/decay_time", FDisplayPointCloud2DecayTime);
 
         // Load UI
         ui->setupUi(this);
@@ -49,8 +51,8 @@ namespace Aliengo {
         FDisplayPointCloud = FManager->createDisplay("rviz/PointCloud2", "map_point_cloud", true);
         FDisplayPointCloud->subProp("Topic")->setValue(FMap3DTopicName.c_str());
         FDisplayPointCloud->subProp("Style")->setValue("Points");
-        FDisplayPointCloud->subProp("Size (Pixels)")->setValue("2");
-        FDisplayPointCloud->subProp("Decay Time")->setValue("1");
+        FDisplayPointCloud->subProp("Size (Pixels)")->setValue(FDisplayPointCloud2SizePixels);
+        FDisplayPointCloud->subProp("Decay Time")->setValue(FDisplayPointCloud2DecayTime);
         FDisplayPointCloud->subProp("Color Transformer")->setValue("Intensity");
 
         connect(button_group_top_camera, SIGNAL(buttonPressed(int)), this, SLOT(RadioButtonTopCameraPressed(int)));

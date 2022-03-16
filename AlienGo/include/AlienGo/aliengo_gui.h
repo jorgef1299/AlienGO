@@ -70,6 +70,7 @@ namespace Aliengo {
         int FBottomCameraMinDepth, FBottomCameraMaxDepth;
         std::string FMap3DTopicName, FMap2DTopicName;
         std::string FFrameId;
+        int FDisplayPointCloud2SizePixels, FDisplayPointCloud2DecayTime;
     };
 }
 
