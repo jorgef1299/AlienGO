@@ -99,12 +99,12 @@ SET(CMAKE_AUTOUIC ON)
 ##   * add "dynamic_reconfigure" to
 ##     find_package(catkin REQUIRED COMPONENTS ...)
 ##   * uncomment the "generate_dynamic_reconfigure_options" section below
-##     and list every .cfg file to be processed
+##     and list every .config file to be processed
 
-## Generate dynamic reconfigure parameters in the 'cfg' folder
+## Generate dynamic reconfigure parameters in the 'config' folder
 # generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
+#   config/DynReconf1.config
+#   config/DynReconf2.config
 # )
 
 ###################################

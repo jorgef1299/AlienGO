@@ -1,0 +1,5 @@
+<launch>
+    <rosparam file="$(find AlienGo)/config/aliengo_params.yaml" />
+    <node name="aliengo_gui" pkg="AlienGo" type="AlienGo_node" required="true"/>
+    <node name="livox_lidar_publisher" pkg="livox_ros_driver" type="livox_ros_driver_node" required="true" output="screen"/>
+</launch>

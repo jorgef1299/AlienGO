@@ -11,11 +11,13 @@
 // RVIZ includes
 #include <rviz/visualization_manager.h>
 #include <rviz/render_panel.h>
+#include <rviz/display.h>
 
 // ROS includes
 #include <ros/ros.h>
 #include "ros_qt_sensor_msgs_image.h"
 #include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/PointCloud2.h>
 
 namespace Ui {
     class MainWindow;
@@ -46,18 +48,28 @@ namespace Aliengo {
         void RadioButtonBottomCameraPressed(int button_id);
         void RadioButtonMapPressed(int button_id);
         void SLOT_ROS_NewTopCameraImage();
-        void SLOT_ROS_NewTopCameraDepthImage();
         void SLOT_ROS_NewBottomCameraImage();
     private:
         rviz::VisualizationManager* FManager;
         rviz::RenderPanel* FRender_panel;
-        rviz::Display* FGrid;
+        rviz::Display* FDisplayGrid;
+        rviz::Display* FDisplayPointCloud;
         Ui::MainWindow *ui;
         CameraState FTopCameraState, FBottomCameraState;
         MapState FMapState;
         ros_qt_interface::TRosQtSensorMsgsImageSub* FTopCameraImageSub;
         ros_qt_interface::TRosQtSensorMsgsImageSub* FBottomCameraImageSub;
-        void convert_depth_to_color(const sensor_msgs::Image &msg, QImage& qt_image);
+        void convert_depth_to_color(const sensor_msgs::Image &msg, QImage& qt_image, uint16_t min_depth, uint16_t max_depth);
+        void setPixmapImage(const QImage& image, QLabel* img_label);
+        ros::NodeHandle nh;
+        ros::Subscriber sub_lidar_cloud;
+        // ROS Parameters
+        std::string FTopCameraRGBTopicName, FBottomCameraRGBTopicName;
+        std::string FTopCameraDepthTopicName, FBottomCameraDepthTopicName;
+        int FTopCameraMinDepth, FTopCameraMaxDepth;
+        int FBottomCameraMinDepth, FBottomCameraMaxDepth;
+        std::string FMap3DTopicName, FMap2DTopicName;
+        std::string FFrameId;
     };
 }
 

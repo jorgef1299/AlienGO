@@ -41,7 +41,7 @@ namespace ros_qt_interface
 
     void TRosQtSensorMsgsImageSub::StopSubscriber()
     {
-        //FDataSub.shutdown();
+        FDataSub.shutdown();
     }
 
     void TRosQtSensorMsgsImageSub::DataReceivedCallback(const sensor_msgs::ImageConstPtr& data)

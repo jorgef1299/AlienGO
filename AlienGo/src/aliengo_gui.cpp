@@ -5,6 +5,20 @@ namespace Aliengo {
     MainWindow::MainWindow(QWidget *parent) :
             QMainWindow(parent), ui(new Ui::MainWindow)
     {
+        // Load ROS Parameters
+        ros::param::get("/top_camera/rgb_image_topic", FTopCameraRGBTopicName);
+        ros::param::get("/top_camera/depth_image_topic", FTopCameraDepthTopicName);
+        ros::param::get("/top_camera/colorize_min_depth", FTopCameraMinDepth);
+        ros::param::get("/top_camera/colorize_max_depth", FTopCameraMaxDepth);
+        ros::param::get("/bottom_camera/rgb_image_topic", FBottomCameraRGBTopicName);
+        ros::param::get("/bottom_camera/depth_image_topic", FBottomCameraDepthTopicName);
+        ros::param::get("/bottom_camera/colorize_min_depth", FBottomCameraMinDepth);
+        ros::param::get("/bottom_camera/colorize_max_depth", FBottomCameraMaxDepth);
+        ros::param::get("/map/3d_topic", FMap3DTopicName);
+        ros::param::get("/map/2d_topic", FMap2DTopicName);
+        ros::param::get("/frame_id", FFrameId);
+
+        // Load UI
         ui->setupUi(this);
 
         // Group Radio buttons in groups
@@ -30,7 +44,14 @@ namespace Aliengo {
         FRender_panel->initialize(FManager->getSceneManager(), FManager);
         FManager->initialize();
         FManager->startUpdate();
-        FGrid = FManager->createDisplay("rviz/Grid", "adjustable grid", true);
+        FManager->setFixedFrame(FFrameId.c_str());
+        FDisplayGrid = FManager->createDisplay("rviz/Grid", "adjustable grid", true);
+        FDisplayPointCloud = FManager->createDisplay("rviz/PointCloud2", "map_point_cloud", true);
+        FDisplayPointCloud->subProp("Topic")->setValue(FMap3DTopicName.c_str());
+        FDisplayPointCloud->subProp("Style")->setValue("Points");
+        FDisplayPointCloud->subProp("Size (Pixels)")->setValue("2");
+        FDisplayPointCloud->subProp("Decay Time")->setValue("1");
+        FDisplayPointCloud->subProp("Color Transformer")->setValue("Intensity");
 
         connect(button_group_top_camera, SIGNAL(buttonPressed(int)), this, SLOT(RadioButtonTopCameraPressed(int)));
         connect(button_group_bottom_camera, SIGNAL(buttonPressed(int)), this, SLOT(RadioButtonBottomCameraPressed(int)));
@@ -57,25 +78,20 @@ namespace Aliengo {
             ui->TopCameraImage->setStyleSheet("background-color: black;");
             FTopCameraState = CameraState::Disabled;
         }
-        else if(button_id == -3 && FTopCameraState != CameraState::RGB) {
+        else {
             // Stop last image subscriber
-            FTopCameraImageSub->StopSubscriber();
-            // Init new image subscriber
-            FTopCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/top_camera/color/image_raw");
+            if(FTopCameraState != CameraState::Disabled)
+                FTopCameraImageSub->StopSubscriber();
+            // Clear label
+            ui->TopCameraImage->clear();
+            if (button_id == -3 && FTopCameraState != CameraState::RGB) {
+                FTopCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub(FTopCameraRGBTopicName);
+                FTopCameraState = CameraState::RGB;
+            } else if (button_id == -4 && FTopCameraState != CameraState::Depth) {
+                FTopCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub(FTopCameraDepthTopicName);
+                FTopCameraState = CameraState::Depth;
+            }
             connect(FTopCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewTopCameraImage()));
-            // Clear label
-            ui->TopCameraImage->clear();
-            FTopCameraState = CameraState::RGB;
-        }
-        else if(button_id == -4 && FTopCameraState != CameraState::Depth) {
-            // Stop last image subscriber
-            FTopCameraImageSub->StopSubscriber();
-            // Init new image subscriber
-            FTopCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/top_camera/depth/image_rect_raw"); //TODO: Subscribe Depth
-            connect(FTopCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewTopCameraDepthImage()));
-            // Clear label
-            ui->TopCameraImage->clear();
-            FTopCameraState = CameraState::Depth;
         }
     }
 
@@ -90,21 +106,20 @@ namespace Aliengo {
             ui->BottomCameraImage->setStyleSheet("background-color: black;");
             FBottomCameraState = CameraState::Disabled;
         }
-        else if(button_id == -3 && FBottomCameraState != CameraState::RGB) {
-            // Init image subscriber
-            FBottomCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/camera/color/image_raw");
-            connect(FTopCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewBottomCameraImage()));
+        else {
+            // Stop last image subscriber
+            if(FBottomCameraState != CameraState::Disabled)
+                FBottomCameraImageSub->StopSubscriber();
             // Clear label
             ui->BottomCameraImage->clear();
-            FBottomCameraState = CameraState::RGB;
-        }
-        else if(button_id == -4 && FBottomCameraState != CameraState::Depth) {
-            // Init image subscriber
-            FBottomCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub("/camera/depth/image_rect_raw");
-            connect(FTopCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewBottomCameraImage()));
-            // Clear label
-            ui->BottomCameraImage->clear();
-            FBottomCameraState = CameraState::Depth;
+            if (button_id == -3 && FBottomCameraState != CameraState::RGB) {
+                FBottomCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub(FBottomCameraRGBTopicName);
+                FBottomCameraState = CameraState::RGB;
+            } else if (button_id == -4 && FBottomCameraState != CameraState::Depth) {
+                FBottomCameraImageSub = new ros_qt_interface::TRosQtSensorMsgsImageSub(FBottomCameraDepthTopicName);
+                FBottomCameraState = CameraState::Depth;
+            }
+            connect(FBottomCameraImageSub, SIGNAL(DataReceived()), this, SLOT(SLOT_ROS_NewBottomCameraImage()));
         }
     }
 
@@ -125,56 +140,55 @@ namespace Aliengo {
 
     void MainWindow::SLOT_ROS_NewTopCameraImage()
     {
-        ROS_INFO("Recebi frame da câmara topo!");
-        sensor_msgs::Image image;
-        FTopCameraImageSub->GetData(image);
-        QImage converted_image(&image.data[0], image.width, image.height, image.step, QImage::Format_RGB888);
-        ui->TopCameraImage->setStyleSheet("");
-        QPixmap pix_image = QPixmap::fromImage(converted_image);
-        ui->TopCameraImage->setPixmap(pix_image);
-    }
-
-    void MainWindow::SLOT_ROS_NewTopCameraDepthImage()
-    {
-        ROS_INFO("Recebi depth frame da câmara topo!");
-        sensor_msgs::Image image;
-        FTopCameraImageSub->GetData(image);
+        sensor_msgs::Image image_msg;
+        FTopCameraImageSub->GetData(image_msg);
         QImage qt_image;
-        convert_depth_to_color(image, qt_image);
-        ui->TopCameraImage->setStyleSheet("");
-        QPixmap pix_image = QPixmap::fromImage(qt_image);
-        ui->TopCameraImage->setPixmap(pix_image);
+        if(image_msg.encoding == sensor_msgs::image_encodings::TYPE_16UC1) {
+            convert_depth_to_color(image_msg, qt_image, 500, 30000);
+        }
+        else {
+            qt_image = QImage(&image_msg.data[0], image_msg.width, image_msg.height, image_msg.step, QImage::Format_RGB888);
+        }
+        setPixmapImage(qt_image, ui->TopCameraImage);
     }
 
     void MainWindow::SLOT_ROS_NewBottomCameraImage()
     {
-        ROS_INFO("Recebi frame da câmara de baixo!");
-        sensor_msgs::Image image;
-        FBottomCameraImageSub->GetData(image);
-        QImage converted_image(&image.data[0], image.width, image.height, image.step, QImage::Format_RGB888);
-        ui->BottomCameraImage->setStyleSheet("");
-        QPixmap pix_image = QPixmap::fromImage(converted_image);
-        ui->BottomCameraImage->setPixmap(pix_image);
+        sensor_msgs::Image image_msg;
+        FBottomCameraImageSub->GetData(image_msg);
+        QImage qt_image;
+        if(image_msg.encoding == sensor_msgs::image_encodings::TYPE_16UC1) {
+            convert_depth_to_color(image_msg, qt_image, 500, 20000);
+        }
+        else {
+            qt_image = QImage(&image_msg.data[0], image_msg.width, image_msg.height, image_msg.step, QImage::Format_RGB888);
+        }
+        setPixmapImage(qt_image, ui->BottomCameraImage);
     }
 
-    void MainWindow::convert_depth_to_color(const sensor_msgs::Image &msg, QImage& qt_image) {
-        uint16_t min_depth = 0;
-        uint16_t max_depth = 65535;
+    /********************************* Auxiliar functions *************************************/
+    void MainWindow::setPixmapImage(const QImage& image, QLabel* img_label)
+    {
+        // Create pixmap
+        QPixmap pix_image = QPixmap::fromImage(image);
+        // Set pixmap
+        img_label->setPixmap(pix_image);
+    }
+
+    void MainWindow::convert_depth_to_color(const sensor_msgs::Image &msg, QImage& qt_image, uint16_t min_depth, uint16_t max_depth)
+    {
         uint16_t d_normal;
         uint8_t pixel_r, pixel_g, pixel_b;
-
-        // Create QImage
-        qt_image = QImage(msg.width, msg.height, QImage::Format_RGB888);
-
         // Convert ROS image to OpenCV
         cv_bridge::CvImagePtr cv_depth = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
-
+        // Create QImage
+        qt_image = QImage(cv_depth->image.cols, cv_depth->image.rows, QImage::Format_RGB888);
         for(int r=0; r < cv_depth->image.rows; r++) {
             uint16_t* ptr = cv_depth->image.ptr<uint16_t>(r);
             for(int c=0; c < cv_depth->image.cols; c++) {
                 if(ptr[c] > max_depth) ptr[c] = max_depth;
                 if(ptr[c] < min_depth) ptr[c] = min_depth;
-                d_normal = (ptr[c] - min_depth)/(max_depth - min_depth)*1529;
+                d_normal = (float)(ptr[c] - min_depth)/(max_depth - min_depth)*1529;
                 // Red component
                 if(d_normal <= 255 || (d_normal > 1275 && d_normal <= 1529)) pixel_r = 255;
                 else if(d_normal > 255 && d_normal <= 510) pixel_r = 255 - d_normal;
@@ -190,8 +204,12 @@ namespace Aliengo {
                 else if(d_normal <= 1020) pixel_b = d_normal - 765;
                 else if(d_normal <= 1275) pixel_b = 255;
                 else pixel_b = 1529 - d_normal;
-                qt_image.setPixelColor(r, c, qRgb(pixel_r, pixel_g, pixel_b));
+                qt_image.setPixelColor(c, r, qRgb(pixel_r, pixel_g, pixel_b));
             }
         }
+    }
+    /****************************** ROS Functions *****************************/
+    void cbLidarData(const sensor_msgs::PointCloud2ConstPtr &points) {
+        ROS_INFO("Entrei!");
     }
 }
