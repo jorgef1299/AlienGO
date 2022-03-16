@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   roscpp
   rviz
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -130,6 +131,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include/AlienGo
+  include/ros_qt_interface
   ${catkin_INCLUDE_DIRS}
 )
 

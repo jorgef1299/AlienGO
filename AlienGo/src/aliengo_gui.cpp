@@ -134,26 +134,15 @@ namespace Aliengo {
         ui->TopCameraImage->setPixmap(pix_image);
     }
 
-    void convert_depth_to_color(const sensor_msgs::ImageConstPtr &msg, QImage& qt_image) {
-        float min_depth = 0.29f;
-        float max_depth = 10.0f;
-        float d_normal;
-
-        // Create QImage
-        qt_image = QImage(msg->width, msg->height, QImage::Format_RGB888);
-
-        // Convert range
-//        for(int i=0; i < msg->height;)
-    }
-
     void MainWindow::SLOT_ROS_NewTopCameraDepthImage()
     {
         ROS_INFO("Recebi depth frame da câmara topo!");
         sensor_msgs::Image image;
         FTopCameraImageSub->GetData(image);
-        QImage converted_image(&image.data[0], image.width, image.height, image.step, QImage::Format_Indexed8);
+        QImage qt_image;
+        convert_depth_to_color(image, qt_image);
         ui->TopCameraImage->setStyleSheet("");
-        QPixmap pix_image = QPixmap::fromImage(converted_image);
+        QPixmap pix_image = QPixmap::fromImage(qt_image);
         ui->TopCameraImage->setPixmap(pix_image);
     }
 
@@ -166,5 +155,43 @@ namespace Aliengo {
         ui->BottomCameraImage->setStyleSheet("");
         QPixmap pix_image = QPixmap::fromImage(converted_image);
         ui->BottomCameraImage->setPixmap(pix_image);
+    }
+
+    void MainWindow::convert_depth_to_color(const sensor_msgs::Image &msg, QImage& qt_image) {
+        uint16_t min_depth = 0;
+        uint16_t max_depth = 65535;
+        uint16_t d_normal;
+        uint8_t pixel_r, pixel_g, pixel_b;
+
+        // Create QImage
+        qt_image = QImage(msg.width, msg.height, QImage::Format_RGB888);
+
+        // Convert ROS image to OpenCV
+        cv_bridge::CvImagePtr cv_depth = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
+
+        for(int r=0; r < cv_depth->image.rows; r++) {
+            uint16_t* ptr = cv_depth->image.ptr<uint16_t>(r);
+            for(int c=0; c < cv_depth->image.cols; c++) {
+                if(ptr[c] > max_depth) ptr[c] = max_depth;
+                if(ptr[c] < min_depth) ptr[c] = min_depth;
+                d_normal = (ptr[c] - min_depth)/(max_depth - min_depth)*1529;
+                // Red component
+                if(d_normal <= 255 || (d_normal > 1275 && d_normal <= 1529)) pixel_r = 255;
+                else if(d_normal > 255 && d_normal <= 510) pixel_r = 255 - d_normal;
+                else if(d_normal > 510 && d_normal <= 1020) pixel_r = 0;
+                else if(d_normal > 1020 && d_normal <= 1275) pixel_r = d_normal - 1020;
+                // Green component
+                if(d_normal <= 255) pixel_g = d_normal;
+                else if(d_normal <= 510) pixel_g = 255;
+                else if(d_normal <= 765) pixel_g = 765 - d_normal;
+                else pixel_g = 0;
+                // Blue component
+                if(d_normal <= 765) pixel_b = d_normal;
+                else if(d_normal <= 1020) pixel_b = d_normal - 765;
+                else if(d_normal <= 1275) pixel_b = 255;
+                else pixel_b = 1529 - d_normal;
+                qt_image.setPixelColor(r, c, qRgb(pixel_r, pixel_g, pixel_b));
+            }
+        }
     }
 }

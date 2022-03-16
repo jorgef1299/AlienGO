@@ -14,7 +14,8 @@
 
 // ROS includes
 #include <ros/ros.h>
-#include "../ros_qt_interface/ros_qt_sensor_msgs_image.h"
+#include "ros_qt_sensor_msgs_image.h"
+#include <cv_bridge/cv_bridge.h>
 
 namespace Ui {
     class MainWindow;
@@ -56,6 +57,7 @@ namespace Aliengo {
         MapState FMapState;
         ros_qt_interface::TRosQtSensorMsgsImageSub* FTopCameraImageSub;
         ros_qt_interface::TRosQtSensorMsgsImageSub* FBottomCameraImageSub;
+        void convert_depth_to_color(const sensor_msgs::Image &msg, QImage& qt_image);
     };
 }
 
