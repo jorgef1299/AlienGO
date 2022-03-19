@@ -19,6 +19,13 @@ namespace Aliengo {
         ros::param::get("/frame_id", FFrameId);
         ros::param::get("/display_pointcloud2/size_pixels", FDisplayPointCloud2SizePixels);
         ros::param::get("/display_pointcloud2/decay_time", FDisplayPointCloud2DecayTime);
+        ros::param::get("/odometry/topic", FOdometryTopicName);
+        ros::param::get("/odometry/position_tolerance", FOdometryPositionTolerance);
+        ros::param::get("/odometry/angle_tolerance", FOdometryAngleTolerance);
+        ros::param::get("/odometry/samples_to_keep", FOdometrySamplesToKeep);
+        ros::param::get("/odometry/shape/alpha", FOdometryShapeAlpha);
+        ros::param::get("/odometry/shape/shaft_length", FOdometryShapeShaftLength);
+        ros::param::get("/odometry/shape/head_length", FOdometryShapeHeadLength);
 
         // Load UI
         ui->setupUi(this);
@@ -64,6 +71,9 @@ namespace Aliengo {
         connect(&FWorker_thread, SIGNAL(started()), FWorker, SLOT(run()));
         connect(FWorker, SIGNAL(topCameraFrameReadyToShow(const QPixmap &)), this, SLOT(SLOT_UpdateTopCameraImage(const QPixmap&)));
         connect(FWorker, SIGNAL(bottomCameraFrameReadyToShow(const QPixmap &)), this, SLOT(SLOT_UpdateBottomCameraImage(const QPixmap&)));
+        connect(ui->actionCurrentPoseTF, SIGNAL(triggered(bool)), this, SLOT(SLOT_CheckboxCurrentPoseTF(bool)));
+        connect(ui->actionOdometry, SIGNAL(triggered(bool)), this, SLOT(SLOT_CheckboxOdometry(bool)));
+        connect(ui->actionPlanned_Trajectory, SIGNAL(triggered(bool)), this, SLOT(SLOT_CheckboxPlannedTrajectory(bool)));
 
         FTopCameraState = CameraState::Disabled;
         FBottomCameraState = CameraState::Disabled;
@@ -160,6 +170,36 @@ namespace Aliengo {
     void MainWindow::SLOT_UpdateBottomCameraImage(const QPixmap& qt_pixmap)
     {
         ui->BottomCameraImage->setPixmap(qt_pixmap);
+    }
+
+    void MainWindow::SLOT_CheckboxCurrentPoseTF(bool state) {
+        if(state) {
+            FDisplayTF = FManager->createDisplay("rviz/TF", "tf_display", true);
+
+        }
+        if(!state) {
+            FDisplayTF->setEnabled(false);
+        }
+    }
+
+    void MainWindow::SLOT_CheckboxOdometry(bool state) {
+        if(state) {
+            FDisplayOdometry = FManager->createDisplay("rviz/Odometry", "robot_odometry", true);
+            FDisplayOdometry->subProp("Topic")->setValue(FOdometryTopicName.c_str());
+            FDisplayOdometry->subProp("Position Tolerance")->setValue(FOdometryPositionTolerance);
+            FDisplayOdometry->subProp("Angle Tolerance")->setValue(FOdometryAngleTolerance);
+            FDisplayOdometry->subProp("Keep")->setValue(FOdometrySamplesToKeep);
+            FDisplayOdometry->subProp("Shape")->subProp("Alpha")->setValue(FOdometryShapeAlpha);
+            FDisplayOdometry->subProp("Shape")->subProp("Shaft Length")->setValue(FOdometryShapeShaftLength);
+            FDisplayOdometry->subProp("Shape")->subProp("Head Length")->setValue(FOdometryShapeHeadLength);
+        }
+        if(!state) {
+            FDisplayOdometry->setEnabled(false);
+        }
+    }
+
+    void MainWindow::SLOT_CheckboxPlannedTrajectory(bool state) {
+
     }
 
 }

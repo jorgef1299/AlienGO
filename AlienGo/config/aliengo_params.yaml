@@ -1,4 +1,5 @@
-frame_id: "/map"
+#frame_id: "/map"
+frame_id: "tracking_camera_odom_frame"
 xfer_format: 0
 publish_freq: 10.0  #5, 10, 20, 50
 enable_lidar_bag: false
@@ -19,6 +20,17 @@ bottom_camera: {
   colorize_max_depth: 20000,
 }
 map: {
-       3d_topic: "/livox/lidar",
-       2d_topic: "/livox/lidar",
+   3d_topic: "/livox/lidar",
+   2d_topic: "/livox/lidar",
+}
+odometry: {
+   topic: "/tracking_camera/odom/sample",
+   position_tolerance: 0.1, # meters
+   angle_tolerance: 0.1, # rad
+   samples_to_keep: 100,
+   shape: {
+      alpha: 0.7,
+      shaft_length: 0.5,
+      head_length: 0.1,
+   }
 }
