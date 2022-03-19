@@ -23,7 +23,7 @@ SET(aliengo_gui_SOURCES src/aliengo_gui.cpp)
 SET(aliengo_gui_HEADERS include/AlienGo/aliengo_gui.h)
 SET(aliengo_gui_UI src/main_window.ui)
 SET(ros_qt_interface_SOURCES src/ros_qt_interface/ros_qt_sensor_msgs_image.cpp)
-SET(ros_qt_interface_HEADERS include/ros_qt_interface/ros_qt_sensor_msgs_image.h)
+SET(ros_qt_interface_HEADERS include/ros_qt_interface/ros_qt_sensor_msgs_image.h src/worker.cpp include/AlienGo/worker.h)
 
 SET(CMAKE_AUTOMOC ON)
 SET(CMAKE_AUTORCC ON)
