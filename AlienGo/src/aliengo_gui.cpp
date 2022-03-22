@@ -58,12 +58,6 @@ namespace Aliengo {
         FManager->startUpdate();
         FManager->setFixedFrame(FFrameId.c_str());
         FDisplayGrid = FManager->createDisplay("rviz/Grid", "adjustable grid", true);
-        FDisplayPointCloud = FManager->createDisplay("rviz/PointCloud2", "map_point_cloud", true);
-        FDisplayPointCloud->subProp("Topic")->setValue(FMap3DTopicName.c_str());
-        FDisplayPointCloud->subProp("Style")->setValue("Points");
-        FDisplayPointCloud->subProp("Size (Pixels)")->setValue(FDisplayPointCloud2SizePixels);
-        FDisplayPointCloud->subProp("Decay Time")->setValue(FDisplayPointCloud2DecayTime);
-        FDisplayPointCloud->subProp("Color Transformer")->setValue("Intensity");
 
         connect(button_group_top_camera, SIGNAL(buttonPressed(int)), this, SLOT(RadioButtonTopCameraPressed(int)));
         connect(button_group_bottom_camera, SIGNAL(buttonPressed(int)), this, SLOT(RadioButtonBottomCameraPressed(int)));
@@ -150,15 +144,20 @@ namespace Aliengo {
     void MainWindow::RadioButtonMapPressed(int button_id)
     {
         if(button_id == -2 && FMapState != MapState::Disabled) {
-            // Stop map related subscribers
-            //TODO: Add subscribers
             FMapState = MapState::Disabled;
+            FDisplayMap->setEnabled(false);
         }
         else if(button_id == -3 && FMapState != MapState::Two_D) {
             FMapState = MapState::Two_D;
         }
         else if(button_id == -4 && FMapState != MapState::Three_D) {
             FMapState = MapState::Three_D;
+            FDisplayMap = FManager->createDisplay("rviz/PointCloud2", "3d_map_point_cloud", true);
+            FDisplayMap->subProp("Topic")->setValue(FMap3DTopicName.c_str());
+            FDisplayMap->subProp("Style")->setValue("Points");
+            FDisplayMap->subProp("Size (Pixels)")->setValue(FDisplayPointCloud2SizePixels);
+            FDisplayMap->subProp("Decay Time")->setValue(FDisplayPointCloud2DecayTime);
+            FDisplayMap->subProp("Color Transformer")->setValue("Intensity");
         }
     }
 

@@ -61,7 +61,7 @@ namespace Aliengo {
         rviz::VisualizationManager* FManager;
         rviz::RenderPanel* FRender_panel;
         rviz::Display* FDisplayGrid;
-        rviz::Display* FDisplayPointCloud;
+        rviz::Display* FDisplayMap;
         rviz::Display* FDisplayOdometry;
         rviz::Display* FDisplayTF;
         Ui::MainWindow *ui;

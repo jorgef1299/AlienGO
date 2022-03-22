@@ -1,5 +1,5 @@
-#frame_id: "/map"
-frame_id: "tracking_camera_odom_frame"
+frame_id: "livox_frame"
+#frame_id: "tracking_camera_odom_frame"
 xfer_format: 0
 publish_freq: 10.0  #5, 10, 20, 50
 enable_lidar_bag: false
