@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rviz
   cv_bridge
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -24,12 +25,17 @@ SET(aliengo_gui_HEADERS include/AlienGo/aliengo_gui.h)
 SET(aliengo_gui_UI src/main_window.ui)
 SET(ros_qt_interface_SOURCES src/ros_qt_interface/ros_qt_sensor_msgs_image.cpp)
 SET(ros_qt_interface_HEADERS include/ros_qt_interface/ros_qt_sensor_msgs_image.h src/worker.cpp include/AlienGo/worker.h)
+SET(onboard_pc_SOURCES src/onboard_pc_locomotion_control.cpp)
+SET(onboard_pc_HEADERS include/AlienGo/onboard_pc_locomotion_control.h)
 
 SET(CMAKE_AUTOMOC ON)
 SET(CMAKE_AUTORCC ON)
 SET(CMAKE_AUTOUIC ON)
 
-
+link_directories(lib)
+add_compile_options(-std=c++11)
+set(EXTRA_LIBS -pthread libunitree_legged_sdk.so lcm)
+set(CMAKE_CXX_FLAGS "-O3 -fPIC")
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -61,11 +67,14 @@ SET(CMAKE_AUTOUIC ON)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  Cartesian.msg
+  HighCmd.msg
+  HighState.msg
+  IMU.msg
+  LED.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -82,10 +91,10 @@ SET(CMAKE_AUTOUIC ON)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -119,7 +128,7 @@ SET(CMAKE_AUTOUIC ON)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES AlienGo
-#  CATKIN_DEPENDS image_transport roscpp rviz
+ CATKIN_DEPENDS message_runtime image_transport roscpp rviz
 #  DEPENDS system_lib
 )
 
@@ -132,6 +141,7 @@ catkin_package(
 include_directories(
   include/AlienGo
   include/ros_qt_interface
+  include/unitree_legged_sdk
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -149,6 +159,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node ${aliengo_main_gui_SOURCES} ${aliengo_gui_SOURCES} ${aliengo_gui_HEADERS} ${aliengo_gui_UI} ${ros_qt_interface_SOURCES} ${ros_qt_interface_HEADERS})
+add_executable(onboard_pc_locomotion_node ${onboard_pc_SOURCES} ${onboard_pc_HEADERS})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -165,6 +176,8 @@ target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${QT_LIBRARIES}
 )
+
+target_link_libraries(onboard_pc_locomotion_node ${catkin_LIBRARIES} ${EXTRA_LIBS})
 
 #############
 ## Install ##
