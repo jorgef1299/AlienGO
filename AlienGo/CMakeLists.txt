@@ -160,6 +160,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node ${aliengo_main_gui_SOURCES} ${aliengo_gui_SOURCES} ${aliengo_gui_HEADERS} ${aliengo_gui_UI} ${ros_qt_interface_SOURCES} ${ros_qt_interface_HEADERS})
 add_executable(onboard_pc_locomotion_node ${onboard_pc_SOURCES} ${onboard_pc_HEADERS})
+add_executable(pub_imu src/pub_imu.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -178,6 +179,10 @@ target_link_libraries(${PROJECT_NAME}_node
 )
 
 target_link_libraries(onboard_pc_locomotion_node ${catkin_LIBRARIES} ${EXTRA_LIBS})
+
+target_link_libraries(pub_imu
+        ${catkin_LIBRARIES}
+        )
 
 #############
 ## Install ##

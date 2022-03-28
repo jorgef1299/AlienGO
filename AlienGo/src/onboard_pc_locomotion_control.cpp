@@ -1,9 +1,16 @@
 #include "onboard_pc_locomotion_control.h"
 
+void cbNewJoyMsg(const sensor_msgs::JoyConstPtr &msg)
+{
+    
+}
+
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "onboard_pc_locomotion_node");
     ros::NodeHandle n_public;
+
+    ros::Subscriber sub_joystick = n_public.subscribe("/joy", 10, cbNewJoyMsg);
 
     Custom custom(HIGHLEVEL);
     custom.pub_high_state = n_public.advertise<AlienGo::HighState>("/AlienGo/high_state", 10);
@@ -17,10 +24,10 @@ int main(int argc, char** argv)
     loop_udpRecv.start();
     loop_control.start();
 
-    while(1){
-        sleep(10);
+    while(ros::ok()){
+        ros::spinOnce();
+        ros::Duration(0.02).sleep();
     };
-
 }
 
 void Custom::UDPRecv()
@@ -111,7 +118,7 @@ void Custom::activateSportMode() {
     }
     else if (motiontime == 4500)
     {
-        std::cout<<"Finshed ! Robot in stand. "<<std::endl;
+        std::cout<<"Finished ! Robot in stand. "<<std::endl;
     }
     else if (motiontime > 4500)
     {

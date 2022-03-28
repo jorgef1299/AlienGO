@@ -3,6 +3,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <ros/ros.h>
+#include <sensor_msgs/Joy.h>
 #include "unitree_legged_sdk.h"
 #include "AlienGo/HighState.h"
 #include "AlienGo/HighCmd.h"
